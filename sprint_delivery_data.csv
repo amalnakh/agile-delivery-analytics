@@ -1,0 +1,16 @@
+Task_ID,Feature_Name,Team,Assigned_Developer,Story_Points,Status,Blocker_Reason
+T-101,User Login Redesign,Frontend,Alice Chen,5,In Progress,Completed successfully
+T-102,Payment Gateway Integration,Backend,Raj Patel,8,Blocked,Awaiting API credentials
+T-103,Cart Checkout Flow,Frontend,Maria Gomez,3,To Do,Figma design update pending
+T-104,Automated Regression Suite,QA,Tom Becker,5,In Progress,Completed successfully
+T-105,CI/CD Pipeline Upgrade,DevOps,Sarah Kim,8,Completed,Completed successfully
+T-106,Push Notification Service,Backend,David Lee,5,Blocked,Waiting on third-party SDK update
+T-107,Dark Mode Support,Frontend,Alice Chen,2,To Do,Design tokens not finalized
+T-108,Load Testing Suite,QA,Tom Becker,3,In Progress,Completed successfully
+T-109,Database Migration Script,Backend,Raj Patel,8,In Progress,Completed successfully
+T-110,Kubernetes Cluster Scaling,DevOps,Sarah Kim,5,Blocked,Pending infra budget approval
+T-111,Profile Settings Page,Frontend,Maria Gomez,2,Completed,Completed successfully
+T-112,API Rate Limiting,Backend,David Lee,3,To Do,Awaiting API credentials
+T-113,Cross-Browser Compatibility Testing,QA,Nina Osei,2,In Progress,Completed successfully
+T-114,Monitoring & Alerting Setup,DevOps,Sarah Kim,3,Completed,Completed successfully
+T-115,Search Autocomplete Feature,Frontend,Alice Chen,5,Blocked,Figma design update pending

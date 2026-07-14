@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint Delivery &amp; Blocker Dashboard</title>
+<style>
+  :root{
+    --bg:#0d1220;
+    --bg-grid: rgba(255,255,255,0.02);
+    --surface:#141b2d;
+    --surface-2:#1a2338;
+    --surface-3:#202b45;
+    --border:#28324a;
+    --border-soft:#1e2740;
+    --text:#e6e9f2;
+    --text-dim:#a3adc4;
+    --text-faint:#5f6a85;
+    --indigo:#6366f1;
+    --indigo-bright:#818cf8;
+    --indigo-dim:#3f3f8f;
+    --amber:#f0b429;
+    --red:#ef5a6f;
+    --green:#3ecf8e;
+    --slate:#6b7690;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Roboto Mono", monospace;
+    --sans: -apple-system, "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html,body{
+    height:100%;
+    background:
+      radial-gradient(1200px 600px at 8% -10%, rgba(99,102,241,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body{
+    background-image:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:40px 28px 80px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:20px;
+    padding-bottom:28px;
+    margin-bottom:32px;
+    border-bottom:1px solid var(--border-soft);
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--indigo-bright);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 3px rgba(62,207,142,0.15);
+  }
+
+  h1{
+    font-size:28px;
+    font-weight:650;
+    letter-spacing:-0.01em;
+    color:#fff;
+  }
+
+  .subtitle{
+    color:var(--text-dim);
+    font-size:14px;
+    margin-top:6px;
+  }
+
+  .sprint-meta{
+    text-align:right;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    line-height:1.6;
+  }
+  .sprint-meta b{ color:var(--text-dim); font-weight:600; }
+
+  /* ---------- METRICS ---------- */
+  .metrics{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+    margin-bottom:34px;
+  }
+
+  .metric-card{
+    position:relative;
+    background:linear-gradient(180deg, var(--surface-2), var(--surface));
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:18px 20px;
+    overflow:hidden;
+  }
+
+  .metric-card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; right:0;
+    height:2px;
+    background:var(--bar,var(--indigo));
+    opacity:0.8;
+  }
+
+  .metric-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.09em;
+    color:var(--text-faint);
+    font-family:var(--mono);
+    margin-bottom:10px;
+  }
+
+  .metric-value{
+    font-family:var(--mono);
+    font-size:30px;
+    font-weight:600;
+    color:#fff;
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+  }
+  .metric-value span{
+    font-size:14px;
+    color:var(--text-faint);
+    font-weight:500;
+  }
+
+  .metric-sub{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--text-dim);
+  }
+
+  #m-points{ --bar: var(--indigo-bright); }
+  #m-progress{ --bar: var(--green); }
+  #m-blockers{ --bar: var(--red); }
+  #m-completed{ --bar: var(--amber); }
+
+  .progress-track{
+    margin-top:10px;
+    height:5px;
+    border-radius:3px;
+    background:var(--surface-3);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--indigo), var(--green));
+    width:0%;
+    transition:width 0.5s ease;
+  }
+
+  /* ---------- PANELS ---------- */
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    margin-bottom:24px;
+  }
+
+  .panel-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 22px;
+    border-bottom:1px solid var(--border-soft);
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  .panel-title{
+    font-size:14.5px;
+    font-weight:600;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .panel-title::before{
+    content:"";
+    width:3px; height:15px;
+    background:var(--indigo-bright);
+    border-radius:2px;
+  }
+
+  .panel-body{ padding:20px 22px 22px; }
+
+  /* ---------- FILTER ---------- */
+  .filter-control{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .filter-control label{
+    font-size:12px;
+    color:var(--text-dim);
+    font-family:var(--mono);
+  }
+
+  select, input[type=text]{
+    background:var(--surface-3);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:7px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  select:focus, input[type=text]:focus{
+    border-color:var(--indigo-bright);
+    box-shadow:0 0 0 3px rgba(99,102,241,0.18);
+  }
+  select{ cursor:pointer; min-width:170px; }
+
+  /* ---------- TABLE ---------- */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+
+  thead th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--text-faint);
+    padding:0 14px 12px;
+    border-bottom:1px solid var(--border-soft);
+    font-weight:500;
+  }
+
+  tbody td{
+    padding:13px 14px;
+    border-bottom:1px solid var(--border-soft);
+    color:var(--text-dim);
+    vertical-align:middle;
+  }
+
+  tbody tr{ transition:background .15s ease; }
+  tbody tr:hover{ background:rgba(99,102,241,0.05); }
+  tbody tr:last-child td{ border-bottom:none; }
+
+  .task-id{
+    font-family:var(--mono);
+    color:var(--indigo-bright);
+    font-weight:600;
+    font-size:12.5px;
+  }
+
+  .feature-name{ color:#fff; font-weight:500; }
+
+  .team-pill{
+    display:inline-block;
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:11px;
+    font-family:var(--mono);
+    letter-spacing:0.02em;
+    border:1px solid transparent;
+  }
+  .team-Frontend{ background:rgba(129,140,248,0.12); color:#a5b0fb; border-color:rgba(129,140,248,0.25); }
+  .team-Backend{ background:rgba(62,207,142,0.10); color:#6fe3ae; border-color:rgba(62,207,142,0.22); }
+  .team-QA{ background:rgba(240,180,41,0.10); color:#f3c65a; border-color:rgba(240,180,41,0.22); }
+  .team-DevOps{ background:rgba(239,90,111,0.10); color:#f38695; border-color:rgba(239,90,111,0.22); }
+
+  .points-chip{
+    font-family:var(--mono);
+    font-weight:600;
+    color:var(--text);
+    background:var(--surface-3);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:2px 8px;
+    font-size:12px;
+  }
+
+  .status-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 10px;
+    border-radius:6px;
+    font-size:11.5px;
+    font-weight:600;
+    font-family:var(--mono);
+    letter-spacing:0.02em;
+    white-space:nowrap;
+  }
+  .status-badge::before{ content:""; width:6px; height:6px; border-radius:50%; }
+
+  .status-Completed{ background:rgba(62,207,142,0.12); color:var(--green); }
+  .status-Completed::before{ background:var(--green); }
+
+  .status-In-Progress{ background:rgba(129,140,248,0.12); color:var(--indigo-bright); }
+  .status-In-Progress::before{ background:var(--indigo-bright); }
+
+  .status-Blocked{ background:rgba(239,90,111,0.12); color:var(--red); }
+  .status-Blocked::before{ background:var(--red); box-shadow:0 0 0 3px rgba(239,90,111,0.15); }
+
+  .status-To-Do{ background:rgba(107,118,144,0.14); color:var(--slate); }
+  .status-To-Do::before{ background:var(--slate); }
+
+  .blocker-note{
+    max-width:220px;
+    color:var(--text-faint);
+    font-size:12.5px;
+    font-style:italic;
+  }
+  .blocker-note.has-blocker{
+    color:#f38695;
+    font-style:normal;
+  }
+
+  .empty-row td{
+    text-align:center;
+    padding:34px;
+    color:var(--text-faint);
+    font-family:var(--mono);
+    font-size:12.5px;
+  }
+
+  /* ---------- FORM ---------- */
+  .blocker-form{
+    display:grid;
+    grid-template-columns: 1fr 2fr auto;
+    gap:14px;
+    align-items:end;
+  }
+
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .field label{
+    font-size:11px;
+    font-family:var(--mono);
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--text-faint);
+  }
+  .field select, .field input{ width:100%; }
+
+  .btn{
+    background:linear-gradient(180deg, var(--indigo-bright), var(--indigo));
+    color:#fff;
+    border:none;
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:13.5px;
+    padding:10px 20px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:transform .1s ease, box-shadow .15s ease, filter .15s ease;
+    box-shadow:0 4px 14px rgba(99,102,241,0.25);
+    white-space:nowrap;
+    height:38px;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:translateY(1px); }
+
+  .form-note{
+    grid-column:1 / -1;
+    font-size:12px;
+    color:var(--text-faint);
+    margin-top:2px;
+    min-height:16px;
+  }
+  .form-note.success{ color:var(--green); }
+  .form-note.error{ color:var(--red); }
+
+  footer{
+    text-align:center;
+    color:var(--text-faint);
+    font-family:var(--mono);
+    font-size:11.5px;
+    margin-top:36px;
+    letter-spacing:0.03em;
+  }
+
+  @media (max-width:900px){
+    .metrics{ grid-template-columns:repeat(2,1fr); }
+    .blocker-form{ grid-template-columns:1fr; }
+    table{ font-size:12.5px; }
+    .sprint-meta{ text-align:left; }
+    header{ flex-direction:column; align-items:flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+
+  :focus-visible{
+    outline:2px solid var(--indigo-bright);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">Sprint-24 · Live Board</div>
+      <h1>Sprint Delivery &amp; Blocker Dashboard</h1>
+      <div class="subtitle">Engineering · Cross-functional delivery tracking</div>
+    </div>
+    <div class="sprint-meta">
+      Sprint window: <b>Jul 07 – Jul 18</b><br>
+      Teams tracked: <b>Frontend · Backend · QA · DevOps</b>
+    </div>
+  </header>
+
+  <section class="metrics">
+    <div class="metric-card" id="m-points">
+      <div class="metric-label">Total Story Points</div>
+      <div class="metric-value" id="val-points">0</div>
+      <div class="metric-sub" id="sub-points">across all logged tasks</div>
+    </div>
+    <div class="metric-card" id="m-progress">
+      <div class="metric-label">Sprint Progress</div>
+      <div class="metric-value" id="val-progress">0<span>%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <div class="metric-card" id="m-blockers">
+      <div class="metric-label">Active Blockers</div>
+      <div class="metric-value" id="val-blockers">0</div>
+      <div class="metric-sub" id="sub-blockers">tasks currently stalled</div>
+    </div>
+    <div class="metric-card" id="m-completed">
+      <div class="metric-label">Tasks Completed</div>
+      <div class="metric-value" id="val-completed">0<span id="val-completed-total"></span></div>
+      <div class="metric-sub" id="sub-completed">of total sprint tasks</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Sprint Task Board</div>
+      <div class="filter-control">
+        <label for="team-filter">Filter by team</label>
+        <select id="team-filter">
+          <option value="all">Show All</option>
+          <option value="Frontend">Frontend</option>
+          <option value="Backend">Backend</option>
+          <option value="QA">QA</option>
+          <option value="DevOps">DevOps</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-body" style="padding-top:8px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Task ID</th>
+            <th>Feature</th>
+            <th>Team</th>
+            <th>Developer</th>
+            <th>Points</th>
+            <th>Status</th>
+            <th>Blocker Note</th>
+          </tr>
+        </thead>
+        <tbody id="task-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">Log / Update Blocker</div>
+    </div>
+    <div class="panel-body">
+      <form class="blocker-form" id="blocker-form">
+        <div class="field">
+          <label for="task-select">Task ID</label>
+          <select id="task-select" required></select>
+        </div>
+        <div class="field">
+          <label for="blocker-note-input">Blocker note</label>
+          <input type="text" id="blocker-note-input" placeholder="e.g. Awaiting API credentials from Payments team" required>
+        </div>
+        <button type="submit" class="btn">Mark as Blocked</button>
+        <div class="form-note" id="form-note"></div>
+      </form>
+    </div>
+  </section>
+
+  <footer>Running fully offline · No external requests · Local session state only</footer>
+
+</div>
+
+<script>
+  // ---------- STATE ----------
+  let tasks = [
+    { id:"SPR-101", feature:"OAuth Login Redesign",       team:"Frontend", dev:"Alice Chen",   points:5, status:"In Progress", blocker:"" },
+    { id:"SPR-102", feature:"Payment Gateway Integration", team:"Backend",  dev:"Raj Patel",    points:8, status:"Blocked",     blocker:"Awaiting API credentials" },
+    { id:"SPR-103", feature:"Checkout Flow Polish",        team:"Frontend", dev:"Maria Gomez",  points:3, status:"To Do",        blocker:"Figma design update pending" },
+    { id:"SPR-104", feature:"Automated Regression Suite",  team:"QA",       dev:"Tom Becker",   points:5, status:"In Progress", blocker:"" },
+    { id:"SPR-105", feature:"CI/CD Pipeline Upgrade",      team:"DevOps",   dev:"Sarah Kim",    points:8, status:"Completed",   blocker:"" },
+    { id:"SPR-106", feature:"Push Notification Service",   team:"Backend",  dev:"David Lee",    points:5, status:"Blocked",     blocker:"Waiting on third-party SDK update" },
+    { id:"SPR-107", feature:"Cross-Browser Test Pass",     team:"QA",       dev:"Nina Osei",    points:2, status:"Completed",   blocker:"" },
+    { id:"SPR-108", feature:"Kubernetes Cluster Scaling",  team:"DevOps",   dev:"Sarah Kim",    points:5, status:"To Do",        blocker:"Pending infra budget approval" }
+  ];
+
+  const tbody = document.getElementById("task-tbody");
+  const teamFilter = document.getElementById("team-filter");
+  const taskSelect = document.getElementById("task-select");
+  const blockerForm = document.getElementById("blocker-form");
+  const blockerInput = document.getElementById("blocker-note-input");
+  const formNote = document.getElementById("form-note");
+
+  function statusClass(status){
+    return "status-" + status.replace(/\s+/g, "-");
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderTable(){
+    const filter = teamFilter.value;
+    const filtered = filter === "all" ? tasks : tasks.filter(t => t.team === filter);
+
+    if(filtered.length === 0){
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="7">No tasks found for this team filter.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(t => `
+      <tr>
+        <td class="task-id">${escapeHtml(t.id)}</td>
+        <td class="feature-name">${escapeHtml(t.feature)}</td>
+        <td><span class="team-pill team-${t.team}">${t.team}</span></td>
+        <td>${escapeHtml(t.dev)}</td>
+        <td><span class="points-chip">${t.points} pt${t.points === 1 ? "" : "s"}</span></td>
+        <td><span class="status-badge ${statusClass(t.status)}">${t.status}</span></td>
+        <td class="blocker-note ${t.blocker ? "has-blocker" : ""}">${t.blocker ? escapeHtml(t.blocker) : "No blockers logged"}</td>
+      </tr>
+    `).join("");
+  }
+
+  function renderTaskSelect(){
+    const current = taskSelect.value;
+    taskSelect.innerHTML = tasks.map(t => `<option value="${t.id}">${t.id} — ${t.feature}</option>`).join("");
+    if(current && tasks.some(t => t.id === current)){
+      taskSelect.value = current;
+    }
+  }
+
+  function renderMetrics(){
+    const totalPoints = tasks.reduce((sum, t) => sum + t.points, 0);
+    const completed = tasks.filter(t => t.status === "Completed");
+    const completedPoints = completed.reduce((sum, t) => sum + t.points, 0);
+    const activeBlockers = tasks.filter(t => t.status === "Blocked").length;
+    const progressPct = totalPoints === 0 ? 0 : Math.round((completedPoints / totalPoints) * 100);
+
+    document.getElementById("val-points").textContent = totalPoints;
+    document.getElementById("sub-points").textContent = `across ${tasks.length} logged tasks`;
+
+    document.getElementById("val-progress").innerHTML = `${progressPct}<span>%</span>`;
+    document.getElementById("progress-fill").style.width = progressPct + "%";
+
+    document.getElementById("val-blockers").textContent = activeBlockers;
+    document.getElementById("sub-blockers").textContent = activeBlockers === 1 ? "task currently stalled" : "tasks currently stalled";
+
+    document.getElementById("val-completed").innerHTML = `${completed.length}<span id="val-completed-total"> / ${tasks.length}</span>`;
+  }
+
+  function renderAll(){
+    renderTable();
+    renderMetrics();
+    renderTaskSelect();
+  }
+
+  teamFilter.addEventListener("change", renderTable);
+
+  blockerForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    const id = taskSelect.value;
+    const note = blockerInput.value.trim();
+
+    const task = tasks.find(t => t.id === id);
+    if(!task){
+      formNote.textContent = "Task ID not found on the current sprint board.";
+      formNote.className = "form-note error";
+      return;
+    }
+
+    task.status = "Blocked";
+    task.blocker = note;
+
+    renderAll();
+
+    formNote.textContent = `${id} updated — marked as Blocked.`;
+    formNote.className = "form-note success";
+    blockerInput.value = "";
+
+    setTimeout(() => {
+      formNote.textContent = "";
+      formNote.className = "form-note";
+    }, 3500);
+  });
+
+  renderAll();
+</script>
+
+</body>
+</html>
